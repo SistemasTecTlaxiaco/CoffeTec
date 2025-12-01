@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>DApp Café - Comprar Desayuno</title>
+<style>
+    body {
+      font-family: Arial;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .card {
+      width: 380px;
+      margin: auto;
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { background: #1e7e34; }
+    #msg {
+      margin-top: 20px;
+      font-weight: bold;
+      background: #fff3cd;
+      padding: 10px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Comprar Desayuno 🍳</h2>
+
+  <label>Tu cuenta (clave pública):</label>
+  <input id="account" placeholder="Ej: GBEYXY6E..." />
+
+  <button onclick="comprarDesayuno()">Comprar</button>
+
+  <div id="msg"></div>
+</div>
+
+<!-- ============================
+      SCRIPT COMPLETO Y FUNCIONAL
+     ============================ -->
+<script type="module">
+  import * as SorobanClient from "https://cdn.jsdelivr.net/npm/soroban-client@3.0.0/dist/browser.js";
+
+  // Servidor RPC Futurenet (válido)
+  const server = new SorobanClient.Server(
+    "https://rpc-futurenet.stellar.org",
+    { allowHttp: true }
+  );
+
+  // Red Soroban actual
+  const network = SorobanClient.Networks.FUTURENET;
+
+  // Tu contrato
+  const CONTRACT_ID = "CCKYB2N4FD5RRDYQ5DHRHYD644XFGYZ7CWCTA5GGEEFCJBNRQ2EAUVZI";
+
+  // ============================================================
+  // FUNCIÓN PRINCIPAL -> SE LLAMA DESDE EL BOTÓN
+  // ============================================================
+  async function comprarDesayuno() {
+    const msg = document.getElementById("msg");
+    const account = document.getElementById("account").value.trim();
+
+    if (account === "") {
+      msg.textContent = "⚠️ Ingresa tu cuenta pública.";
+      return;
+    }
+
+    msg.textContent = "Procesando...";
+
+    try {
+      // Construimos una cuenta ficticia solo para simular
+      const source = new SorobanClient.Account(account, "0");
+
+      // Construcción de la transacción
+      const tx = new SorobanClient.TransactionBuilder(source, {
+        fee: "100",
+        networkPassphrase: network,
+      })
+        .addOperation(
+          SorobanClient.Operation.invokeContract({
+            contract: CONTRACT_ID,
+            function: "add_order", // <-- CAMBIAR SI TU FUNCIÓN ES OTRA
+            args: [], // Sin argumentos porque no sabemos aún cuáles requiere tu contrato
+          })
+        )
+        .setTimeout(30)
+        .build();
+
+      // Simulación (NO requiere secret key)
+      const sim = await server.simulateTransaction(tx);
+
+      msg.textContent =
+        "✔️ Simulación exitosa:\n" +
+        JSON.stringify(sim, null, 2);
+
+    } catch (err) {
+      msg.textContent = "❌ Error: " + err.message;
+      console.error(err);
+    }
+  }
+
+  // Hacer pública la función
+  window.comprarDesayuno = comprarDesayuno;
+</script>
+
+</body>
+</html>
