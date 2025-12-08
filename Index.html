@@ -324,6 +324,95 @@
             color: var(--text-light);
             margin-top: 0.25rem;
         }
+
+        /* Admin Panel */
+        .admin-toggle {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: var(--secondary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+            font-size: 0.875rem;
+        }
+
+        .admin-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            border: 1px solid #e2e8f0;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .btn-close-admin {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.2s;
+        }
+
+        .btn-close-admin:hover {
+            color: #e53e3e;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table th {
+            font-weight: 600;
+            background: #f7fafc;
+        }
     </style>
 </head>
 
@@ -375,27 +464,180 @@
         <span id="toastMessage"></span>
     </div>
 
+    <!-- Admin Toggle -->
+    <div class="admin-toggle" onclick="toggleAdmin()">⚙️ Admin</div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel">
+        <button onclick="toggleAdmin()" class="btn-close-admin">✕</button>
+        <h2>👑 Panel de Administración</h2>
+
+        <h3>📝 Registrar Nuevo Producto</h3>
+        <form id="productForm" onsubmit="handleRegisterProduct(event)">
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" name="name" class="form-input" required placeholder="Ej: Tacos de Canasta">
+            </div>
+            <div class="form-group">
+                <label>Precio (XLM)</label>
+                <input type="number" name="price" step="0.1" class="form-input" required placeholder="5">
+            </div>
+            <div class="form-group">
+                <label>Icono (Emoji)</label>
+                <input type="text" name="icon" class="form-input" required
+                    placeholder="Presiona 'Win + .' para emojis (Ej: 🌮)" maxlength="2">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" name="desc" class="form-input" required placeholder="Descripción corta...">
+            </div>
+            <button type="submit" class="btn-buy">Guardar Producto</button>
+        </form>
+
+        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+        <h3>📊 Registro de Ventas</h3>
+        <button class="btn-connect" onclick="loadSales()"
+            style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">Actualizar</button>
+        <div style="overflow-x: auto;">
+            <table class="table" id="salesTable">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Comprador</th>
+                        <th>Precio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4">Cargando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // CONFIGURATION
         // ==========================================
         // ⚠️ REEMPLAZA ESTA DIRECCIÓN CON LA TUYA PARA RECIBIR LOS PAGOS
         const RESTAURANT_WALLET = "GBEYXY6EXA3Q3UQNW7TMBV34GT7D67EZ4NOKYDCDIK3EJLCCH7GB5TKY";
+        const API_URL = "http://localhost:8000/api";
 
-        const PRODUCTS = [
-            { id: 1, name: "Huevos con Jamón", price: "5", desc: "Clásico desayuno nutritivo con jamón de pavo.", icon: "🍳" },
-            { id: 2, name: "Hotcakes Fluffy", price: "4.5", desc: "Torre de 3 hotcakes con miel y mantequilla.", icon: "🥞" },
-            { id: 3, name: "Enchiladas Verdes", price: "6", desc: "Rellenas de pollo con salsa verde y queso.", icon: "🌮" },
-            { id: 4, name: "Chilaquiles Rojos", price: "5.5", desc: "Totopos crujientes con crema, queso y cebolla.", icon: "🌶️" },
-            { id: 5, name: "Café de Olla", price: "2", desc: "Café tradicional mexicano con canela y piloncillo.", icon: "☕" },
-            { id: 6, name: "Jugo de Naranja", price: "2.5", desc: "Recién exprimido, 100% natural.", icon: "🍊" }
-        ];
+        let PRODUCTS = []; // Fetched from server
 
         // ==========================================
         // STATE & UI HELPERS
         // ==========================================
         let currentUser = null;
         let isDevMode = false;
+
+        async function fetchProducts() {
+            try {
+                const res = await fetch(`${API_URL}/products`);
+                PRODUCTS = await res.json();
+                renderMenu();
+            } catch (e) {
+                console.error("Error fetching products", e);
+                showToast("Error cargando productos. Verifica que el servidor esté corriendo.", "error");
+            }
+        }
+
+
+
+        function toggleAdmin() {
+            console.log("Toggle Admin clicked");
+            const panel = document.getElementById('adminPanel');
+            if (!panel) {
+                console.error("Admin Panel not found");
+                return;
+            }
+            panel.classList.toggle('active');
+            // Load sales when opening
+            if (panel.classList.contains('active')) {
+                loadSales();
+            }
+        }
+
+        async function handleRegisterProduct(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = {
+                name: form.name.value,
+                price: form.price.value,
+                icon: form.icon.value,
+                desc: form.desc.value
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    showToast("Producto registrado exitosamente", "success");
+                    form.reset();
+                    fetchProducts(); // Refresh menu
+                } else {
+                    throw new Error("Error del servidor");
+                }
+            } catch (e) {
+                showToast("Error al guardar producto: " + e.message, "error");
+            }
+        }
+
+        async function loadSales() {
+            const tableBody = document.querySelector('#salesTable tbody');
+            tableBody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
+
+            try {
+                const res = await fetch(`${API_URL}/orders`);
+                const orders = await res.json();
+
+                if (orders.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4">No hay ventas registradas aún.</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = orders.map(o => {
+                    const shortBuyer = o.buyer ? o.buyer.substring(0, 4) + '...' + o.buyer.substring(o.buyer.length - 4) : 'Anónimo';
+                    const buyerLink = o.buyer ? `<a href="https://stellar.expert/explorer/testnet/account/${o.buyer}" target="_blank" title="Ver en Explorer">${shortBuyer} 🔗</a>` : shortBuyer;
+
+                    return `
+                    <tr>
+                        <td>${new Date(o.serverDate).toLocaleString()}</td>
+                        <td>${o.icon} ${o.productName}</td>
+                        <td>${buyerLink}</td>
+                        <td>${o.price} XLM</td>
+                    </tr>
+                `}).join('');
+
+            } catch (e) {
+                tableBody.innerHTML = '<tr><td colspan="4" style="color:red">Error cargando ventas</td></tr>';
+            }
+        }
+
+        async function recordSaleOnServer(product, buyer) {
+            try {
+                await fetch(`${API_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        productId: product.id,
+                        productName: product.name,
+                        price: product.price,
+                        icon: product.icon,
+                        buyer: buyer
+                    })
+                });
+                console.log("Venta registrada en servidor");
+            } catch (e) {
+                console.error("Error registrando venta", e);
+            }
+        }
 
         function showToast(msg, type = 'info') {
             const toast = document.getElementById('toast');
@@ -413,6 +655,10 @@
 
         function renderMenu() {
             const grid = document.getElementById('menuGrid');
+            if (PRODUCTS.length === 0) {
+                grid.innerHTML = '<p>No hay productos disponibles.</p>';
+                return;
+            }
             grid.innerHTML = PRODUCTS.map(p => `
                 <div class="card">
                     <div class="card-image">${p.icon}</div>
@@ -479,6 +725,9 @@
             history.unshift(newPurchase);
             localStorage.setItem(key, JSON.stringify(history));
             renderPurchases();
+
+            // Notify Server
+            recordSaleOnServer(product, currentUser);
         }
 
         function renderPurchases() {
@@ -519,6 +768,8 @@
         window.conectarFreighter = async () => alert("Cargando...");
         window.iniciarCompra = async () => alert("Cargando...");
 
+        // Initial Fetch
+        fetchProducts();
     </script>
 
     <!-- Cargar StellarSdk (Global) -->
@@ -643,9 +894,6 @@
             // Wallet de prueba
             updateWalletUI("GBEYXY6EXA3Q3UQNW7TMBV34GT7D67EZ4NOKYDCDIK3EJLCCH7GB5TKY");
         }
-
-        // Render inicial
-        renderMenu();
     </script>
 </body>
 

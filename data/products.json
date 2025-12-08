@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "name": "Huevos con Jamón",
+    "price": "5",
+    "desc": "Clásico desayuno nutritivo con jamón de pavo.",
+    "icon": "🍳"
+  },
+  {
+    "id": 2,
+    "name": "Hotcakes Fluffy",
+    "price": "4.5",
+    "desc": "Torre de 3 hotcakes con miel y mantequilla.",
+    "icon": "🥞"
+  },
+  {
+    "id": 3,
+    "name": "Enchiladas Verdes",
+    "price": "6",
+    "desc": "Rellenas de pollo con salsa verde y queso.",
+    "icon": "🌮"
+  },
+  {
+    "id": 4,
+    "name": "Chilaquiles Rojos",
+    "price": "5.5",
+    "desc": "Totopos crujientes con crema, queso y cebolla.",
+    "icon": "🌶️"
+  },
+  {
+    "id": 5,
+    "name": "Café de Olla",
+    "price": "2",
+    "desc": "Café tradicional mexicano con canela y piloncillo.",
+    "icon": "☕"
+  },
+  {
+    "id": 6,
+    "name": "Jugo de Naranja",
+    "price": "2.5",
+    "desc": "Recién exprimido, 100% natural.",
+    "icon": "🍊"
+  },
+  {
+    "id": 1765223537795,
+    "name": "Tacos de canasta ",
+    "price": "1",
+    "desc": "Ricos taquitos de canasta tradionales",
+    "icon": ".."
+  },
+  {
+    "id": 1765223845917,
+    "name": "Camarones empanizados",
+    "price": "1",
+    "desc": "Set de 4 camarones empanizados con arroz y ensalada cesar ",
+    "icon": "🦐"
+  },
+  {
+    "id": 1765224158027,
+    "name": "Tacos de guisado",
+    "price": "0.1",
+    "desc": "Tacos de diferentes guisados con arroz y salsa",
+    "icon": "🌮"
+  }
+]

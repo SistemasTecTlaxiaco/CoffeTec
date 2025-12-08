@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1765224183172,
+    "productId": 1765224158027,
+    "productName": "Tacos de guisado",
+    "price": "0.1",
+    "icon": "🌮",
+    "buyer": "GDEJNMV545Z7BDM7JRGIAH72TX7VY2BYJZLVLKDAUQJR7LIZJVAVG26T",
+    "serverDate": "2025-12-08T20:03:03.172Z"
+  },
+  {
+    "id": 1765223864512,
+    "productId": 1765223845917,
+    "productName": "Camarones empanizados",
+    "price": "1",
+    "icon": "🦐",
+    "buyer": "GDEJNMV545Z7BDM7JRGIAH72TX7VY2BYJZLVLKDAUQJR7LIZJVAVG26T",
+    "serverDate": "2025-12-08T19:57:44.512Z"
+  },
+  {
+    "id": 1765223663824,
+    "productId": 1765223537795,
+    "productName": "Tacos de canasta ",
+    "price": "1",
+    "icon": "..",
+    "buyer": "GDEJNMV545Z7BDM7JRGIAH72TX7VY2BYJZLVLKDAUQJR7LIZJVAVG26T",
+    "serverDate": "2025-12-08T19:54:23.824Z"
+  },
+  {
+    "id": 1765223613474,
+    "productId": 6,
+    "productName": "Jugo de Naranja",
+    "price": "2.5",
+    "icon": "🍊",
+    "buyer": "GDEJNMV545Z7BDM7JRGIAH72TX7VY2BYJZLVLKDAUQJR7LIZJVAVG26T",
+    "serverDate": "2025-12-08T19:53:33.474Z"
+  },
+  {
+    "id": 1765222773169,
+    "productId": 4,
+    "productName": "Chilaquiles Rojos",
+    "price": "5.5",
+    "icon": "🌶️",
+    "buyer": "GDEJNMV545Z7BDM7JRGIAH72TX7VY2BYJZLVLKDAUQJR7LIZJVAVG26T",
+    "serverDate": "2025-12-08T19:39:33.169Z"
+  },
+  {
+    "id": 1765222717458,
+    "productId": 4,
+    "productName": "Chilaquiles Rojos",
+    "price": "5.5",
+    "icon": "🌶️",
+    "buyer": "GDEJNMV545Z7BDM7JRGIAH72TX7VY2BYJZLVLKDAUQJR7LIZJVAVG26T",
+    "serverDate": "2025-12-08T19:38:37.458Z"
+  }
+]
