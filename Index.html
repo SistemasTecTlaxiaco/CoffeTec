@@ -1,125 +1,652 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <title>DApp Café - Comprar Desayuno</title>
-<style>
-    body {
-      font-family: Arial;
-      background: #f5f5f5;
-      padding: 20px;
-    }
-    .card {
-      width: 380px;
-      margin: auto;
-      background: white;
-      border-radius: 10px;
-      padding: 25px;
-      box-shadow: 0 0 10px #ccc;
-    }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-    }
-    button {
-      background: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover { background: #1e7e34; }
-    #msg {
-      margin-top: 20px;
-      font-weight: bold;
-      background: #fff3cd;
-      padding: 10px;
-      border-radius: 5px;
-      white-space: pre-wrap;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffe Tec</title>
+    <style>
+        :root {
+            --primary: #ff7a00;
+            --primary-dark: #cc6300;
+            --secondary: #2d3748;
+            --bg: #f7fafc;
+            --card-bg: #ffffff;
+            --text: #1a202c;
+            --text-light: #718096;
+            --success: #48bb78;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--card-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .wallet-badge {
+            background: #edf2f7;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--secondary);
+            display: none;
+            /* Hidden by default */
+        }
+
+        .btn-connect {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-connect:hover {
+            background: #1a202c;
+            transform: translateY(-1px);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 1rem;
+            background: linear-gradient(135deg, #ff7a00 0%, #ffbb33 100%);
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        /* Menu Grid */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 4rem;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-image {
+            height: 160px;
+            background: #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+        }
+
+        .card-desc {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            flex: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .price {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .btn-buy {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-buy:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-buy:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        /* Notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transform: translateY(150%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid #e53e3e;
+        }
+
+        .toast.info {
+            border-left: 4px solid #3182ce;
+        }
+
+        /* Loader */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Dev Mode Warning */
+        #devModeBanner {
+            background: #fff3cd;
+            color: #856404;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        /* Disconnect Button */
+        .btn-disconnect {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: none;
+            margin-left: 0.5rem;
+            transition: background 0.2s;
+        }
+
+        .btn-disconnect:hover {
+            background: #c53030;
+        }
+
+        /* Purchases Section */
+        .purchases-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: none;
+        }
+
+        .purchases-section h2 {
+            margin-bottom: 1.5rem;
+            color: var(--secondary);
+        }
+
+        .purchase-list {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+
+        .purchase-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid #edf2f7;
+        }
+
+        .purchase-icon {
+            font-size: 2rem;
+            background: #fff5eb;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .purchase-details {
+            flex: 1;
+        }
+
+        .purchase-date {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Dev Mode Banner -->
+    <div id="devModeBanner">⚠️ Modo Desarrollo Activo (Solo lectura)</div>
 
-<div class="card">
-  <h2>Comprar Desayuno 🍳</h2>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="brand">
+            🍳 Coffee Tec
+        </div>
+        <div class="wallet-status">
+            <div id="walletBadge" class="wallet-badge">
+                <span id="walletAddress"></span>
+            </div>
+            <button id="btnDisconnect" class="btn-disconnect" onclick="desconectarWallet()">Desconectar</button>
+            <button id="btnConnect" class="btn-connect" onclick="conectarFreighter()">
+                <span class="btn-text">Conectar Wallet</span>
+                <div class="spinner" id="connectSpinner"></div>
+            </button>
+        </div>
+    </nav>
 
-  <label>Tu cuenta (clave pública):</label>
-  <input id="account" placeholder="Ej: GBEYXY6E..." />
+    <!-- Hero -->
+    <header class="hero">
+        <h1>Desayunos </h1>
+        <p>Paga tu comida favorita directamente con XLM en la red Stellar</p>
+    </header>
 
-  <button onclick="comprarDesayuno()">Comprar</button>
+    <!-- Menu Grid -->
+    <div class="container">
+        <div class="menu-grid" id="menuGrid">
+            <!-- Cards will be injected here via JS -->
+        </div>
 
-  <div id="msg"></div>
-</div>
+        <!-- Purchases Section -->
+        <div id="purchasesSection" class="purchases-section">
+            <h2>🛍️ Mis Compras</h2>
+            <div id="purchasesList" class="purchase-list">
+                <!-- Purchases will be injected here -->
+            </div>
+        </div>
+    </div>
 
-<!-- ============================
-      SCRIPT COMPLETO Y FUNCIONAL
-     ============================ -->
-<script type="module">
-  import * as SorobanClient from "https://cdn.jsdelivr.net/npm/soroban-client@3.0.0/dist/browser.js";
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastIcon"></span>
+        <span id="toastMessage"></span>
+    </div>
 
-  // Servidor RPC Futurenet (válido)
-  const server = new SorobanClient.Server(
-    "https://rpc-futurenet.stellar.org",
-    { allowHttp: true }
-  );
+    <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        // ⚠️ REEMPLAZA ESTA DIRECCIÓN CON LA TUYA PARA RECIBIR LOS PAGOS
+        const RESTAURANT_WALLET = "GBEYXY6EXA3Q3UQNW7TMBV34GT7D67EZ4NOKYDCDIK3EJLCCH7GB5TKY";
 
-  // Red Soroban actual
-  const network = SorobanClient.Networks.FUTURENET;
+        const PRODUCTS = [
+            { id: 1, name: "Huevos con Jamón", price: "5", desc: "Clásico desayuno nutritivo con jamón de pavo.", icon: "🍳" },
+            { id: 2, name: "Hotcakes Fluffy", price: "4.5", desc: "Torre de 3 hotcakes con miel y mantequilla.", icon: "🥞" },
+            { id: 3, name: "Enchiladas Verdes", price: "6", desc: "Rellenas de pollo con salsa verde y queso.", icon: "🌮" },
+            { id: 4, name: "Chilaquiles Rojos", price: "5.5", desc: "Totopos crujientes con crema, queso y cebolla.", icon: "🌶️" },
+            { id: 5, name: "Café de Olla", price: "2", desc: "Café tradicional mexicano con canela y piloncillo.", icon: "☕" },
+            { id: 6, name: "Jugo de Naranja", price: "2.5", desc: "Recién exprimido, 100% natural.", icon: "🍊" }
+        ];
 
-  // Tu contrato
-  const CONTRACT_ID = "CCKYB2N4FD5RRDYQ5DHRHYD644XFGYZ7CWCTA5GGEEFCJBNRQ2EAUVZI";
+        // ==========================================
+        // STATE & UI HELPERS
+        // ==========================================
+        let currentUser = null;
+        let isDevMode = false;
 
-  // ============================================================
-  // FUNCIÓN PRINCIPAL -> SE LLAMA DESDE EL BOTÓN
-  // ============================================================
-  async function comprarDesayuno() {
-    const msg = document.getElementById("msg");
-    const account = document.getElementById("account").value.trim();
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const message = document.getElementById('toastMessage');
 
-    if (account === "") {
-      msg.textContent = "⚠️ Ingresa tu cuenta pública.";
-      return;
-    }
+            toast.className = `toast ${type} show`;
+            icon.innerText = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+            message.innerText = msg;
 
-    msg.textContent = "Procesando...";
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
 
-    try {
-      // Construimos una cuenta ficticia solo para simular
-      const source = new SorobanClient.Account(account, "0");
+        function renderMenu() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = PRODUCTS.map(p => `
+                <div class="card">
+                    <div class="card-image">${p.icon}</div>
+                    <div class="card-body">
+                        <div class="card-title">${p.name}</div>
+                        <div class="card-desc">${p.desc}</div>
+                        <div class="card-footer">
+                            <div class="price">${p.price} XLM</div>
+                            <button class="btn-buy" onclick="iniciarCompra(${p.id})" ${!currentUser ? 'disabled' : ''}>
+                                Comprar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-      // Construcción de la transacción
-      const tx = new SorobanClient.TransactionBuilder(source, {
-        fee: "100",
-        networkPassphrase: network,
-      })
-        .addOperation(
-          SorobanClient.Operation.invokeContract({
-            contract: CONTRACT_ID,
-            function: "add_order", // <-- CAMBIAR SI TU FUNCIÓN ES OTRA
-            args: [], // Sin argumentos porque no sabemos aún cuáles requiere tu contrato
-          })
-        )
-        .setTimeout(30)
-        .build();
+        function updateWalletUI(account) {
+            currentUser = account;
+            const btnConnect = document.getElementById('btnConnect');
+            const btnDisconnect = document.getElementById('btnDisconnect');
+            const badge = document.getElementById('walletBadge');
+            const addressSpan = document.getElementById('walletAddress');
 
-      // Simulación (NO requiere secret key)
-      const sim = await server.simulateTransaction(tx);
+            if (account) {
+                btnConnect.style.display = 'none';
+                btnDisconnect.style.display = 'block';
+                badge.style.display = 'flex';
+                addressSpan.innerText = `${account.substring(0, 4)}...${account.substring(account.length - 4)}`;
+                renderPurchases(); // Show purchases when connected
+            } else {
+                btnConnect.style.display = 'block';
+                btnDisconnect.style.display = 'none';
+                badge.style.display = 'none';
+                document.getElementById('purchasesSection').style.display = 'none';
+            }
 
-      msg.textContent =
-        "✔️ Simulación exitosa:\n" +
-        JSON.stringify(sim, null, 2);
+            // Re-render menu to update button states
+            renderMenu();
+        }
 
-    } catch (err) {
-      msg.textContent = "❌ Error: " + err.message;
-      console.error(err);
-    }
-  }
+        // ==========================================
+        // PURCHASES & DISCONNECT
+        // ==========================================
+        function desconectarWallet() {
+            currentUser = null;
+            updateWalletUI(null);
+            showToast("Wallet desconectada", "info");
+        }
 
-  // Hacer pública la función
-  window.comprarDesayuno = comprarDesayuno;
-</script>
+        function savePurchase(product) {
+            if (!currentUser) return;
+            const key = `purchases_${currentUser}`;
+            const history = JSON.parse(localStorage.getItem(key) || '[]');
 
+            const newPurchase = {
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                icon: product.icon,
+                date: new Date().toISOString()
+            };
+
+            history.unshift(newPurchase);
+            localStorage.setItem(key, JSON.stringify(history));
+            renderPurchases();
+        }
+
+        function renderPurchases() {
+            const section = document.getElementById('purchasesSection');
+            const list = document.getElementById('purchasesList');
+
+            if (!currentUser) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            const key = `purchases_${currentUser}`;
+            const history = JSON.parse(localStorage.getItem(key) || '[]');
+
+            if (history.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-light)">No has realizado compras con esta cuenta aún.</p>';
+                return;
+            }
+
+            list.innerHTML = history.map(p => `
+                <div class="purchase-item">
+                    <div class="purchase-icon">${p.icon}</div>
+                    <div class="purchase-details">
+                        <div style="font-weight: bold">${p.name}</div>
+                        <div class="purchase-date">${new Date(p.date).toLocaleString()}</div>
+                    </div>
+                     <div class="price">${p.price} XLM</div>
+                </div>
+            `).join('');
+        }
+
+        // ==========================================
+        // FREIGHTER LOGIC
+        // ==========================================
+
+        // Stub inicial
+        window.conectarFreighter = async () => alert("Cargando...");
+        window.iniciarCompra = async () => alert("Cargando...");
+
+    </script>
+
+    <!-- Cargar StellarSdk (Global) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/10.4.1/stellar-sdk.min.js"></script>
+
+    <script type="module">
+        // Carga dinámica robusta
+        try {
+            // Cargar Freighter (ESM)
+            const freighterModule = await import("https://cdn.jsdelivr.net/npm/@stellar/freighter-api@1.7.0/+esm");
+            const freighter = freighterModule.default && freighterModule.default.isConnected ? freighterModule.default : freighterModule;
+
+            // Verificar StellarSdk (Global)
+            if (typeof window.StellarSdk === 'undefined') {
+                throw new Error("StellarSdk no cargó correctamente");
+            }
+            const StellarSdk = window.StellarSdk;
+
+            if (typeof freighter.isConnected !== 'function') throw new Error("API incompleta");
+
+            console.log("✅ Librerías listas");
+
+            // --- CONEXIÓN ---
+            window.conectarFreighter = async function () {
+                const btn = document.getElementById('btnConnect');
+                const spinner = document.getElementById('connectSpinner');
+                const btnText = btn.querySelector('.btn-text');
+
+                btnText.style.display = 'none';
+                spinner.style.display = 'block';
+                btn.disabled = true;
+
+                try {
+                    // Pequeña espera para asegurar inyección
+                    await new Promise(r => setTimeout(r, 300));
+
+                    if (await freighter.isConnected()) {
+                        const key = await freighter.getPublicKey();
+                        updateWalletUI(key);
+                    } else {
+                        // Fallback a modo dev si no hay extensión
+                        if (confirm("Freighter no detectada. ¿Quieres usar el modo de prueba (solo lectura)?")) {
+                            activarModoDev();
+                        }
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showToast("Error al conectar: " + e.message, 'error');
+                } finally {
+                    spinner.style.display = 'none';
+                    btnText.style.display = 'block';
+                    btn.disabled = false;
+                }
+            };
+
+            // --- COMPRA ---
+            window.iniciarCompra = async function (productId) {
+                if (!currentUser) return showToast("Conecta tu wallet primero", 'error');
+                if (isDevMode) return showToast("Modo desarrollo: No se pueden realizar pagos reales", 'info');
+
+                const product = PRODUCTS.find(p => p.id === productId);
+                if (!product) return;
+
+                showToast(`Iniciando pago por ${product.name}...`, 'info');
+
+                try {
+                    const server = new StellarSdk.Server("https://horizon-testnet.stellar.org");
+                    const source = await server.loadAccount(currentUser);
+
+                    const tx = new StellarSdk.TransactionBuilder(source, {
+                        fee: StellarSdk.BASE_FEE,
+                        networkPassphrase: StellarSdk.Networks.TESTNET
+                    })
+                        .addOperation(StellarSdk.Operation.payment({
+                            destination: RESTAURANT_WALLET,
+                            asset: StellarSdk.Asset.native(),
+                            amount: product.price
+                        }))
+                        .addMemo(StellarSdk.Memo.text(`Pago: ${product.name}`)) // Memo con el nombre del producto
+                        .setTimeout(30)
+                        .build();
+
+                    const signedXdr = await freighter.signTransaction(tx.toXDR(), "TESTNET");
+                    const res = await server.submitTransaction(new StellarSdk.Transaction(signedXdr, StellarSdk.Networks.TESTNET));
+
+                    console.log(res);
+                    showToast(`¡Pago exitoso! Disfruta tus ${product.name}`, 'success');
+
+                    // SAVE PURCHASE
+                    savePurchase(product);
+
+                } catch (e) {
+                    console.error(e);
+                    if (e.response && e.response.status === 404) {
+                        showToast("⚠️ Tu cuenta no existe en Testnet. Abriendo Friendbot...", 'error');
+                        setTimeout(() => {
+                            window.open("https://laboratory.stellar.org/#account-creator?network=test", "_blank");
+                        }, 2000);
+                    } else {
+                        showToast("Error en el pago: " + (e.message || "Desconocido"), 'error');
+                    }
+                }
+            };
+
+            // Auto-check al cargar
+            setTimeout(async () => {
+                if (await freighter.isConnected()) {
+                    // Opcional: Auto-conectar si ya tiene permisos (requiere guardar estado o probar getPublicKey)
+                    // Por ahora solo dejamos listo el botón
+                    console.log("Freighter detectada y lista");
+                }
+            }, 500);
+
+        } catch (err) {
+            console.error("Error cargando librería:", err);
+            showToast("Error cargando sistema de pagos", 'error');
+        }
+
+        function activarModoDev() {
+            isDevMode = true;
+            document.getElementById('devModeBanner').style.display = 'block';
+            // Wallet de prueba
+            updateWalletUI("GBEYXY6EXA3Q3UQNW7TMBV34GT7D67EZ4NOKYDCDIK3EJLCCH7GB5TKY");
+        }
+
+        // Render inicial
+        renderMenu();
+    </script>
 </body>
+
 </html>
