@@ -1,6 +1,12 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse
+} = require('@simplewebauthn/server');
 
 const PORT = 8000;
 
@@ -25,6 +31,10 @@ const MIME_TYPES = {
 const DATA_DIR = path.join(__dirname, 'data');
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+const CREDENTIALS_FILE = path.join(DATA_DIR, 'admin_credentials.json');
+
+let expectedChallenge = '';
+let activeAdminToken = '';
 
 // Helper to read JSON
 const readJson = (file) => {
@@ -74,7 +84,7 @@ http.createServer(async function (request, response) {
   // CORS for local dev flex
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (request.method === 'OPTIONS') {
     response.writeHead(204);
@@ -83,6 +93,198 @@ http.createServer(async function (request, response) {
   }
 
   // --- API ROUTES ---
+
+  // GET /api/auth/status
+  if (request.url === '/api/auth/status' && request.method === 'GET') {
+    const credentials = readJson(CREDENTIALS_FILE);
+    const authHeader = request.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    const isAuthenticated = !!(token && token === activeAdminToken);
+
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({
+      hasAdmin: credentials.length > 0,
+      isAuthenticated: isAuthenticated
+    }));
+    return;
+  }
+
+  // GET /api/auth/register-options
+  if (request.url === '/api/auth/register-options' && request.method === 'GET') {
+    try {
+      const credentials = readJson(CREDENTIALS_FILE);
+      if (credentials.length > 0) {
+        const authHeader = request.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (!token || token !== activeAdminToken) {
+          response.writeHead(401, { 'Content-Type': 'application/json' });
+          response.end(JSON.stringify({ error: 'Unauthorized. Admin must be authenticated to add more passkeys.' }));
+          return;
+        }
+      }
+
+      const rpName = 'Coffee Tec';
+      const rpID = 'localhost';
+      const options = await generateRegistrationOptions({
+        rpName,
+        rpID,
+        userID: 'admin',
+        userName: 'admin@coffetec.com',
+        userDisplayName: 'Coffee Tec Admin',
+        attestationType: 'none',
+        authenticatorSelection: {
+          residentKey: 'required',
+          userVerification: 'preferred',
+        },
+      });
+
+      expectedChallenge = options.challenge;
+      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify(options));
+    } catch (e) {
+      console.error(e);
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  // POST /api/auth/register-verification
+  if (request.url === '/api/auth/register-verification' && request.method === 'POST') {
+    try {
+      const body = await parseBody(request);
+      const credentials = readJson(CREDENTIALS_FILE);
+
+      if (credentials.length > 0) {
+        const authHeader = request.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (!token || token !== activeAdminToken) {
+          response.writeHead(401, { 'Content-Type': 'application/json' });
+          response.end(JSON.stringify({ error: 'Unauthorized. Admin must be authenticated to add more passkeys.' }));
+          return;
+        }
+      }
+
+      const rpID = 'localhost';
+      const origin = 'http://localhost:8000';
+      const verification = await verifyRegistrationResponse({
+        response: body,
+        expectedChallenge,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
+      });
+
+      if (verification.verified && verification.registrationInfo) {
+        const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+        const newCred = {
+          credentialID: Buffer.from(credentialID).toString('base64'),
+          credentialPublicKey: Buffer.from(credentialPublicKey).toString('base64'),
+          counter,
+          transports: body.response.transports || []
+        };
+        credentials.push(newCred);
+        writeJson(CREDENTIALS_FILE, credentials);
+
+        const crypto = require('crypto');
+        activeAdminToken = crypto.randomBytes(32).toString('hex');
+
+        response.writeHead(200, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ verified: true, token: activeAdminToken }));
+      } else {
+        response.writeHead(400, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ verified: false, error: 'Verification failed' }));
+      }
+    } catch (e) {
+      console.error(e);
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  // GET /api/auth/login-options
+  if (request.url === '/api/auth/login-options' && request.method === 'GET') {
+    try {
+      const credentials = readJson(CREDENTIALS_FILE);
+      if (credentials.length === 0) {
+        response.writeHead(400, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ error: 'No admin passkeys registered.' }));
+        return;
+      }
+
+      const rpID = 'localhost';
+      const options = await generateAuthenticationOptions({
+        rpID,
+        allowCredentials: credentials.map(cred => ({
+          id: Buffer.from(cred.credentialID, 'base64'),
+          type: 'public-key',
+          transports: cred.transports,
+        })),
+        userVerification: 'preferred',
+      });
+
+      expectedChallenge = options.challenge;
+      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify(options));
+    } catch (e) {
+      console.error(e);
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  // POST /api/auth/login-verification
+  if (request.url === '/api/auth/login-verification' && request.method === 'POST') {
+    try {
+      const body = await parseBody(request);
+      const credentials = readJson(CREDENTIALS_FILE);
+
+      const savedCred = credentials.find(cred => {
+        const idBase64 = Buffer.from(body.rawId, 'base64url').toString('base64');
+        return cred.credentialID === idBase64;
+      });
+
+      if (!savedCred) {
+        response.writeHead(400, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ verified: false, error: 'Credential not found' }));
+        return;
+      }
+
+      const rpID = 'localhost';
+      const origin = 'http://localhost:8000';
+      const verification = await verifyAuthenticationResponse({
+        response: body,
+        expectedChallenge,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
+        credential: {
+          id: Buffer.from(savedCred.credentialID, 'base64'),
+          publicKey: Buffer.from(savedCred.credentialPublicKey, 'base64'),
+          counter: savedCred.counter,
+        }
+      });
+
+      if (verification.verified) {
+        savedCred.counter = verification.authenticationInfo.newCounter;
+        writeJson(CREDENTIALS_FILE, credentials);
+
+        const crypto = require('crypto');
+        activeAdminToken = crypto.randomBytes(32).toString('hex');
+
+        response.writeHead(200, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ verified: true, token: activeAdminToken }));
+      } else {
+        response.writeHead(400, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ verified: false, error: 'Authentication signature invalid' }));
+      }
+    } catch (e) {
+      console.error(e);
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
 
   // GET /api/products
   if (request.url === '/api/products' && request.method === 'GET') {
@@ -94,12 +296,20 @@ http.createServer(async function (request, response) {
 
   // POST /api/products (Add/Register Product)
   if (request.url === '/api/products' && request.method === 'POST') {
+    const authHeader = request.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token || token !== activeAdminToken) {
+      response.writeHead(401, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
     try {
       const body = await parseBody(request);
       const products = readJson(PRODUCTS_FILE);
 
       const newProduct = {
-        id: Date.now(), // simple ID
+        id: Date.now(),
         name: body.name || "Nuevo Producto",
         price: body.price || "0",
         desc: body.desc || "Sin descripción",
@@ -120,6 +330,14 @@ http.createServer(async function (request, response) {
 
   // GET /api/orders
   if (request.url === '/api/orders' && request.method === 'GET') {
+    const authHeader = request.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token || token !== activeAdminToken) {
+      response.writeHead(401, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
     const orders = readJson(ORDERS_FILE);
     response.writeHead(200, { 'Content-Type': 'application/json' });
     response.end(JSON.stringify(orders));
@@ -134,11 +352,11 @@ http.createServer(async function (request, response) {
 
       const newOrder = {
         id: Date.now(),
-        ...body, // expects { productId, productName, price, buyer, date }
+        ...body,
         serverDate: new Date().toISOString()
       };
 
-      orders.unshift(newOrder); // Newest first
+      orders.unshift(newOrder);
       writeJson(ORDERS_FILE, orders);
 
       response.writeHead(201, { 'Content-Type': 'application/json' });
