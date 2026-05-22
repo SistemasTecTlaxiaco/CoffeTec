@@ -413,6 +413,69 @@
             font-weight: 600;
             background: #f7fafc;
         }
+
+        /* ---- PASSKEY STYLES ---- */
+        #adminLoginScreen {
+            text-align: center;
+            padding: 1rem 0 0.5rem;
+        }
+        .passkey-icon {
+            font-size: 3.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+        .btn-passkey {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.75rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(45,55,72,0.3);
+            width: 100%;
+            justify-content: center;
+            margin: 0.4rem 0;
+        }
+        .btn-passkey:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(45,55,72,0.4);
+        }
+        .btn-passkey.register {
+            background: linear-gradient(135deg, #ff7a00 0%, #ffbb33 100%);
+            box-shadow: 0 4px 12px rgba(255,122,0,0.35);
+        }
+        .btn-passkey.register:hover {
+            box-shadow: 0 6px 18px rgba(255,122,0,0.5);
+        }
+        .btn-passkey.danger {
+            background: linear-gradient(135deg, #c53030 0%, #e53e3e 100%);
+            box-shadow: 0 4px 12px rgba(197,48,48,0.3);
+        }
+        .admin-authenticated-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #c6f6d5;
+            color: #276749;
+            padding: 0.35rem 0.9rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+        }
+        #adminContent { display: none; }
+        .passkey-divider {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin: 0.5rem 0;
+        }
     </style>
 </head>
 
@@ -472,49 +535,76 @@
         <button onclick="toggleAdmin()" class="btn-close-admin">✕</button>
         <h2>👑 Panel de Administración</h2>
 
-        <h3>📝 Registrar Nuevo Producto</h3>
-        <form id="productForm" onsubmit="handleRegisterProduct(event)">
-            <div class="form-group">
-                <label>Nombre</label>
-                <input type="text" name="name" class="form-input" required placeholder="Ej: Tacos de Canasta">
+        <!-- LOGIN SCREEN (shown when not authenticated) -->
+        <div id="adminLoginScreen">
+            <span class="passkey-icon">🔑</span>
+            <h3 style="margin:0 0 0.5rem">Acceso Seguro con Passkey</h3>
+            <p style="color:#718096;font-size:0.9rem;margin-bottom:1.25rem">Usa tu huella, Face ID o PIN de dispositivo para autenticarte.</p>
+            <button class="btn-passkey" id="btnLoginPasskey" onclick="passkeyLogin()">
+                🛡️ Iniciar Sesión con Passkey
+            </button>
+            <div class="passkey-divider" id="registerHint" style="display:none">
+                — Primera vez —
             </div>
-            <div class="form-group">
-                <label>Precio (XLM)</label>
-                <input type="number" name="price" step="0.1" class="form-input" required placeholder="5">
-            </div>
-            <div class="form-group">
-                <label>Icono (Emoji)</label>
-                <input type="text" name="icon" class="form-input" required
-                    placeholder="Presiona 'Win + .' para emojis (Ej: 🌮)" maxlength="2">
-            </div>
-            <div class="form-group">
-                <label>Descripción</label>
-                <input type="text" name="desc" class="form-input" required placeholder="Descripción corta...">
-            </div>
-            <button type="submit" class="btn-buy">Guardar Producto</button>
-        </form>
+            <button class="btn-passkey register" id="btnRegisterPasskey" onclick="passkeyRegister()" style="display:none">
+                ➕ Registrar Passkey (primera vez)
+            </button>
+        </div>
 
-        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+        <!-- ADMIN CONTENT (shown when authenticated) -->
+        <div id="adminContent">
+            <div class="admin-authenticated-badge">✅ Sesión activa con Passkey</div>
 
-        <h3>📊 Registro de Ventas</h3>
-        <button class="btn-connect" onclick="loadSales()"
-            style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">Actualizar</button>
-        <div style="overflow-x: auto;">
-            <table class="table" id="salesTable">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Producto</th>
-                        <th>Comprador</th>
-                        <th>Precio</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="4">Cargando...</td>
-                    </tr>
-                </tbody>
-            </table>
+            <h3>📝 Registrar Nuevo Producto</h3>
+            <form id="productForm" onsubmit="handleRegisterProduct(event)">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="name" class="form-input" required placeholder="Ej: Tacos de Canasta">
+                </div>
+                <div class="form-group">
+                    <label>Precio (XLM)</label>
+                    <input type="number" name="price" step="0.1" class="form-input" required placeholder="5">
+                </div>
+                <div class="form-group">
+                    <label>Icono (Emoji)</label>
+                    <input type="text" name="icon" class="form-input" required
+                        placeholder="Presiona 'Win + .' para emojis (Ej: 🌮)" maxlength="2">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" name="desc" class="form-input" required placeholder="Descripción corta...">
+                </div>
+                <button type="submit" class="btn-buy">Guardar Producto</button>
+            </form>
+
+            <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+            <h3>📊 Registro de Ventas</h3>
+            <button class="btn-connect" onclick="loadSales()"
+                style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">Actualizar</button>
+            <div style="overflow-x: auto;">
+                <table class="table" id="salesTable">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Producto</th>
+                            <th>Comprador</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+            <button class="btn-passkey register" onclick="passkeyRegister()" style="font-size:0.85rem;padding:0.5rem 1rem">
+                ➕ Agregar otra Passkey
+            </button>
+            <button class="btn-passkey danger" onclick="adminLogout()" style="font-size:0.85rem;padding:0.5rem 1rem;margin-top:0.4rem">
+                🚪 Cerrar Sesión Admin
+            </button>
         </div>
     </div>
 
@@ -547,22 +637,196 @@
 
 
 
-        function toggleAdmin() {
-            console.log("Toggle Admin clicked");
-            const panel = document.getElementById('adminPanel');
-            if (!panel) {
-                console.error("Admin Panel not found");
-                return;
+        // ==========================================
+        // PASSKEY AUTH
+        // ==========================================
+        const ADMIN_TOKEN_KEY = 'coffetec_admin_token';
+
+        function getAdminToken() {
+            return sessionStorage.getItem(ADMIN_TOKEN_KEY);
+        }
+
+        function setAdminToken(token) {
+            sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+        }
+
+        function clearAdminToken() {
+            sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+        }
+
+        function bufferToBase64url(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let str = '';
+            for (const byte of bytes) str += String.fromCharCode(byte);
+            return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
+        function base64urlToBuffer(b64url) {
+            const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+            const bin = atob(b64);
+            const buf = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+            return buf.buffer;
+        }
+
+        async function passkeyRegister() {
+            try {
+                showToast('Solicitando opciones de registro...', 'info');
+                const token = getAdminToken();
+                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                const optRes = await fetch('/api/auth/register-options', { headers });
+                if (!optRes.ok) {
+                    const err = await optRes.json();
+                    return showToast('Error: ' + err.error, 'error');
+                }
+                const options = await optRes.json();
+
+                // Decode challenge and user.id
+                options.challenge = base64urlToBuffer(options.challenge);
+                options.user.id = base64urlToBuffer(options.user.id);
+                if (options.excludeCredentials) {
+                    options.excludeCredentials = options.excludeCredentials.map(c => ({
+                        ...c, id: base64urlToBuffer(c.id)
+                    }));
+                }
+
+                showToast('Activa tu autenticador (huella / Face ID)...', 'info');
+                const credential = await navigator.credentials.create({ publicKey: options });
+
+                const regBody = {
+                    id: credential.id,
+                    rawId: bufferToBase64url(credential.rawId),
+                    type: credential.type,
+                    response: {
+                        clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+                        attestationObject: bufferToBase64url(credential.response.attestationObject),
+                        transports: credential.response.getTransports ? credential.response.getTransports() : []
+                    }
+                };
+
+                const verRes = await fetch('/api/auth/register-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) },
+                    body: JSON.stringify(regBody)
+                });
+                const verData = await verRes.json();
+                if (verData.verified) {
+                    setAdminToken(verData.token);
+                    showAdminContent();
+                    showToast('✅ Passkey registrada y sesión iniciada', 'success');
+                } else {
+                    showToast('Error de verificación: ' + (verData.error || 'desconocido'), 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error al registrar passkey: ' + e.message, 'error');
             }
+        }
+
+        async function passkeyLogin() {
+            try {
+                showToast('Iniciando autenticación con Passkey...', 'info');
+                const optRes = await fetch('/api/auth/login-options');
+                if (!optRes.ok) {
+                    const err = await optRes.json();
+                    // No passkeys registered yet — show register button
+                    if (optRes.status === 400) {
+                        document.getElementById('registerHint').style.display = 'block';
+                        document.getElementById('btnRegisterPasskey').style.display = 'flex';
+                        return showToast('No hay passkeys registradas. Regístrala primero.', 'info');
+                    }
+                    return showToast('Error: ' + err.error, 'error');
+                }
+                const options = await optRes.json();
+
+                options.challenge = base64urlToBuffer(options.challenge);
+                if (options.allowCredentials) {
+                    options.allowCredentials = options.allowCredentials.map(c => ({
+                        ...c, id: base64urlToBuffer(c.id)
+                    }));
+                }
+
+                showToast('Activa tu autenticador (huella / Face ID)...', 'info');
+                const assertion = await navigator.credentials.get({ publicKey: options });
+
+                const authBody = {
+                    id: assertion.id,
+                    rawId: bufferToBase64url(assertion.rawId),
+                    type: assertion.type,
+                    response: {
+                        clientDataJSON: bufferToBase64url(assertion.response.clientDataJSON),
+                        authenticatorData: bufferToBase64url(assertion.response.authenticatorData),
+                        signature: bufferToBase64url(assertion.response.signature),
+                        userHandle: assertion.response.userHandle ? bufferToBase64url(assertion.response.userHandle) : null
+                    }
+                };
+
+                const verRes = await fetch('/api/auth/login-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(authBody)
+                });
+                const verData = await verRes.json();
+                if (verData.verified) {
+                    setAdminToken(verData.token);
+                    showAdminContent();
+                    showToast('✅ Autenticado correctamente', 'success');
+                    loadSales();
+                } else {
+                    showToast('Autenticación fallida: ' + (verData.error || 'desconocido'), 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                if (e.name === 'NotAllowedError') {
+                    showToast('Autenticación cancelada por el usuario.', 'info');
+                } else {
+                    showToast('Error al autenticar: ' + e.message, 'error');
+                }
+            }
+        }
+
+        function showAdminContent() {
+            document.getElementById('adminLoginScreen').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+        }
+
+        function showAdminLogin() {
+            document.getElementById('adminLoginScreen').style.display = 'block';
+            document.getElementById('adminContent').style.display = 'none';
+        }
+
+        function adminLogout() {
+            clearAdminToken();
+            showAdminLogin();
+            showToast('Sesión admin cerrada', 'info');
+        }
+
+        function toggleAdmin() {
+            const panel = document.getElementById('adminPanel');
             panel.classList.toggle('active');
-            // Load sales when opening
             if (panel.classList.contains('active')) {
-                loadSales();
+                // Check if already authenticated
+                if (getAdminToken()) {
+                    showAdminContent();
+                    loadSales();
+                } else {
+                    showAdminLogin();
+                    // Auto-check if first time (no passkeys)
+                    fetch('/api/auth/login-options').then(r => {
+                        if (r.status === 400) {
+                            document.getElementById('registerHint').style.display = 'block';
+                            document.getElementById('btnRegisterPasskey').style.display = 'flex';
+                        }
+                    }).catch(() => {});
+                }
             }
         }
 
         async function handleRegisterProduct(event) {
             event.preventDefault();
+            const token = getAdminToken();
+            if (!token) return showToast('Debes autenticarte con Passkey primero', 'error');
+
             const form = event.target;
             const data = {
                 name: form.name.value,
@@ -574,13 +838,21 @@
             try {
                 const res = await fetch(`${API_URL}/products`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
                     body: JSON.stringify(data)
                 });
+                if (res.status === 401) {
+                    clearAdminToken();
+                    showAdminLogin();
+                    return showToast('Sesión expirada. Vuelve a autenticarte.', 'error');
+                }
                 if (res.ok) {
                     showToast("Producto registrado exitosamente", "success");
                     form.reset();
-                    fetchProducts(); // Refresh menu
+                    fetchProducts();
                 } else {
                     throw new Error("Error del servidor");
                 }
@@ -591,10 +863,25 @@
 
         async function loadSales() {
             const tableBody = document.querySelector('#salesTable tbody');
+            if (!tableBody) return;
             tableBody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
 
+            const token = getAdminToken();
+            if (!token) {
+                tableBody.innerHTML = '<tr><td colspan="4" style="color:#e53e3e">🔒 Autentícate para ver ventas</td></tr>';
+                return;
+            }
+
             try {
-                const res = await fetch(`${API_URL}/orders`);
+                const res = await fetch(`${API_URL}/orders`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.status === 401) {
+                    clearAdminToken();
+                    showAdminLogin();
+                    tableBody.innerHTML = '<tr><td colspan="4" style="color:#e53e3e">Sesión expirada</td></tr>';
+                    return;
+                }
                 const orders = await res.json();
 
                 if (orders.length === 0) {

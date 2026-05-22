@@ -128,7 +128,7 @@ http.createServer(async function (request, response) {
       const options = await generateRegistrationOptions({
         rpName,
         rpID,
-        userID: 'admin',
+        userID: new TextEncoder().encode('coffetec-admin'),
         userName: 'admin@coffetec.com',
         userDisplayName: 'Coffee Tec Admin',
         attestationType: 'none',
@@ -172,15 +172,20 @@ http.createServer(async function (request, response) {
         expectedChallenge,
         expectedOrigin: origin,
         expectedRPID: rpID,
+        requireUserVerification: false,
       });
 
-      if (verification.verified && verification.registrationInfo) {
-        const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+      const registrationInfo = verification.registrationInfo;
+      const credential = registrationInfo?.credential ?? registrationInfo;
+
+      if (verification.verified && credential && credential.id && credential.publicKey) {
+        // v13: credential.id is already a base64url string
+        // credential.publicKey is a Uint8Array
         const newCred = {
-          credentialID: Buffer.from(credentialID).toString('base64'),
-          credentialPublicKey: Buffer.from(credentialPublicKey).toString('base64'),
-          counter,
-          transports: body.response.transports || []
+          credentialID: credential.id,
+          credentialPublicKey: Buffer.from(credential.publicKey).toString('base64'),
+          counter: credential.counter || 0,
+          transports: body.response?.transports || []
         };
         credentials.push(newCred);
         writeJson(CREDENTIALS_FILE, credentials);
@@ -191,8 +196,12 @@ http.createServer(async function (request, response) {
         response.writeHead(200, { 'Content-Type': 'application/json' });
         response.end(JSON.stringify({ verified: true, token: activeAdminToken }));
       } else {
+        const errorMessage = verification.verified
+          ? 'Verification returned invalid credential data'
+          : 'Verification failed';
+
         response.writeHead(400, { 'Content-Type': 'application/json' });
-        response.end(JSON.stringify({ verified: false, error: 'Verification failed' }));
+        response.end(JSON.stringify({ verified: false, error: errorMessage }));
       }
     } catch (e) {
       console.error(e);
@@ -216,7 +225,7 @@ http.createServer(async function (request, response) {
       const options = await generateAuthenticationOptions({
         rpID,
         allowCredentials: credentials.map(cred => ({
-          id: Buffer.from(cred.credentialID, 'base64'),
+          id: cred.credentialID,
           type: 'public-key',
           transports: cred.transports,
         })),
@@ -241,8 +250,9 @@ http.createServer(async function (request, response) {
       const credentials = readJson(CREDENTIALS_FILE);
 
       const savedCred = credentials.find(cred => {
-        const idBase64 = Buffer.from(body.rawId, 'base64url').toString('base64');
-        return cred.credentialID === idBase64;
+        // v13: credential IDs are stored as base64url strings
+        // body.id is already a base64url string from the client
+        return cred.credentialID === body.id;
       });
 
       if (!savedCred) {
@@ -258,9 +268,10 @@ http.createServer(async function (request, response) {
         expectedChallenge,
         expectedOrigin: origin,
         expectedRPID: rpID,
+        requireUserVerification: false,
         credential: {
-          id: Buffer.from(savedCred.credentialID, 'base64'),
-          publicKey: Buffer.from(savedCred.credentialPublicKey, 'base64'),
+          id: savedCred.credentialID,
+          publicKey: new Uint8Array(Buffer.from(savedCred.credentialPublicKey, 'base64')),
           counter: savedCred.counter,
         }
       });

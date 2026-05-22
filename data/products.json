@@ -61,5 +61,19 @@
     "price": "0.1",
     "desc": "Tacos de diferentes guisados con arroz y salsa",
     "icon": "🌮"
+  },
+  {
+    "id": 1779380669249,
+    "name": "Daisy González",
+    "price": "3",
+    "desc": "Taquitos de birria",
+    "icon": "🌮"
+  },
+  {
+    "id": 1779412150900,
+    "name": "Tacos",
+    "price": "2",
+    "desc": "tacos con cilantro",
+    "icon": "🌮"
   }
 ]
