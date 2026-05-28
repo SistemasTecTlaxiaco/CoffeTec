@@ -3,7 +3,7 @@
 
 ¡Bienvenido a **CoffeTec**! Una plataforma web descentralizada orientada a la gestión y compra de desayunos y alimentos de cafetería, integrada directamente con tecnología Blockchain.
 
-Como se observa en la interfaz de la aplicación (`image_e88eab.png`), los usuarios pueden explorar un menú interactivo y realizar el pago de sus alimentos favoritos utilizando **XLM** a través de la red **Stellar**.
+Como se observa en la interfaz de la aplicación, los usuarios pueden explorar un menú interactivo y realizar el pago de sus alimentos favoritos utilizando **XLM** a través de la red **Stellar**.
 
 ---
 
