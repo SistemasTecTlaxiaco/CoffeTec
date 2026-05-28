@@ -45,7 +45,9 @@ De acuerdo con la arquitectura actual del repositorio:
 ├── package.json    # Configuración de scripts y dependencias
 └── LÉAME.md        # Documentación del proyecto
 
-IMAGEN DE LA APLICACIÓN:
+LINk: https://cafeteria1-ae4a.onrender.com/
 
-<img width="1289" height="697" alt="image" src="https://github.com/user-attachments/assets/252194f4-92eb-4834-a258-08a57a3a5176" />
+
+
+
 
